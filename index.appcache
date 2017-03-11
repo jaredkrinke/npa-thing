@@ -1,0 +1,11 @@
+﻿CACHE MANIFEST
+# Version: 1
+
+CACHE:
+index.html
+js/main.js
+http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css
+http://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css
+http://code.jquery.com/jquery-3.1.1.min.js
+http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js
+http://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js
