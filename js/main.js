@@ -121,7 +121,7 @@ function process(body, delimiter) {
                 Total: row.Duration,
                 Supervised: supervised,
                 Fraction: supervised / row.Duration,
-                RequiredHours: Math.max(0, (row.Duration * 0.05) - supervised)
+                RequiredHours: Math.max(0, (row.Duration * 0.07) - supervised)
             };
         });
 
