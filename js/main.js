@@ -125,10 +125,10 @@ function process(body, delimiter) {
             var supervised = (supervisedHours[row.Name] || 0);
             return {
                 Name: row.Name,
+                RequiredHours: Math.max(0, (row.Duration * 0.07) - supervised),
                 Total: row.Duration,
                 Supervised: supervised,
-                Fraction: supervised / row.Duration,
-                RequiredHours: Math.max(0, (row.Duration * 0.07) - supervised)
+                Fraction: supervised / row.Duration
             };
         });
 
