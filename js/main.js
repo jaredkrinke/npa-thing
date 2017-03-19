@@ -111,23 +111,34 @@ function process(body, delimiter) {
             };
         });
 
-    var supervisedHours = {};
-    var addToSupervisedHours = function (row) {
-        var sum = (supervisedHours[row.Name] || 0) + row.Duration;
-        supervisedHours[row.Name] = sum;
+    var supervisedHours = {
+        Total: {},
+        ServiceLogEntry: {},
+        ResultNote: {},
     };
 
-    serviceLogEntries.forEach(addToSupervisedHours);
-    resultNotes.forEach(addToSupervisedHours);
+    var createAddToSupervisedHours = function (o) {
+        return function (row) {
+            var sum = (o[row.Name] || 0) + row.Duration;
+            o[row.Name] = sum;
+        };
+    };
+
+    serviceLogEntries.forEach(createAddToSupervisedHours(supervisedHours.Total));
+    serviceLogEntries.forEach(createAddToSupervisedHours(supervisedHours.ServiceLogEntry));
+    resultNotes.forEach(createAddToSupervisedHours(supervisedHours.Total));
+    resultNotes.forEach(createAddToSupervisedHours(supervisedHours.ResultNote));
 
     var percents = hours
         .map(function (row) {
-            var supervised = (supervisedHours[row.Name] || 0);
+            var supervised = (supervisedHours.Total[row.Name] || 0);
             return {
                 Name: row.Name,
                 RequiredHours: Math.max(0, (row.Duration * 0.07) - supervised),
                 Total: row.Duration,
                 Supervised: supervised,
+                'Service Log Entry': supervisedHours.ServiceLogEntry[row.Name] || 0,
+                'Result Note': supervisedHours.ResultNote[row.Name] || 0,
                 Fraction: supervised / row.Duration
             };
         });
