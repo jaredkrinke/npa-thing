@@ -11,8 +11,7 @@
                 var output = process(input, ',');
 
                 populateTable($('#output'), output.Data);
-                populateTable($('#output-invalid-sle'), output.InvalidServiceLogEntries);
-                populateTable($('#output-invalid-rn'), output.InvalidResultNotes);
+                populateTable($('#output-invalid'), output.Invalid);
             };
 
             fr.readAsText( file );
@@ -58,101 +57,99 @@ function process(body, delimiter) {
 
     var hoursMap = hours.toDictionary(function (item) { return item.Name; }, function (item) { return item.Duration; });
 
-    var serviceLogEntries = data
-        .where(function (row) { return row['Service Log Entry']; })
-        .groupBy(['Service Log Entry'])
-        .orderBy('key')
-        .map(function (group) {
-            return {
-                Name: group.key,
-                Duration: group.reduce(function (acc, item) { return acc + parseFloat(item['Duration (Hrs)']); }, 0)
-            };
-        });
-
-    var staffNames = data
-        .groupBy(['Staff Name'])
-        .toDictionary(function (group) { return group.key; }, function () { return true; });
-
-    var serviceLogEntriesInvalid = serviceLogEntries
-        .where(function (row) { return staffNames[row.Name] === undefined; });
-
-    var resultNotesRaw = data
-        .where(function (row) { return row['Result Note']; })
+    var entriesRaw = data
+        .where(function (row) { return (row['Service Log Entry'] || row['Result Note']) && parseFloat(row['Duration (Hrs)']); })
         .selectMany(function (row) {
-            var names = parseResultNote(row['Result Note']);
+            var names = [];
+            var serviceLogEntry = row['Service Log Entry'];
+            if (serviceLogEntry) {
+                names.push(serviceLogEntry);
+            }
+
+            var resultNote = row['Result Note'];
+            if (resultNote) {
+                var names = parseResultNote(row['Result Note']);
+                for (var i = 0, count = names.length; i < count; i++) {
+                    var name = names[i];
+                    if (name != serviceLogEntry) {
+                        names.push(name);
+                    }
+                }
+            }
+
             return names.map(function (name) {
                 return {
                     Valid: !!(hoursMap[name]),
                     Name: name,
-                    Duration: row['Duration (Hrs)']
+                    Individual: (names.length === 1 && names[0] === serviceLogEntry),
+                    Duration: parseFloat(row['Duration (Hrs)'])
                 };
             });
         });
 
-    var resultNotes = resultNotesRaw
+    var entriesInvalid = entriesRaw
+        .where(function (row) { return !row.Valid; })
+        .map(function (row) {
+            return {
+                Name: row.Name,
+                Individual: row.Individual,
+                Duration: row.Duration
+            };
+        });
+
+    var entries = entriesRaw
         .where(function (row) { return row.Valid; })
         .groupBy(['Name'])
         .orderBy('key')
         .map(function (group) {
             return {
                 Name: group.key,
-                Duration: group.reduce(function (acc, item) { return acc + parseFloat(item.Duration); }, 0)
+                DurationIndividual: group.reduce(function (acc, row) { return acc + (row.Individual ? row.Duration : 0); }, 0),
+                Duration: group.reduce(function (acc, row) { return acc + row.Duration; }, 0)
             };
-        });
-
-    var resultNotesInvalid = resultNotesRaw
-        .where(function (row) { return !row.Valid; })
-        .groupBy(['Name'])
-        .orderBy('key')
-        .map(function (group) {
-            return {
-                Name: group.key,
-                Duration: group.reduce(function (acc, item) { return acc + parseFloat(item.Duration); }, 0)
-            };
-        });
-
-    var supervisedHours = {
-        Total: {},
-        ServiceLogEntry: {},
-        ResultNote: {},
-    };
-
-    var createAddToSupervisedHours = function (o) {
-        return function (row) {
-            var sum = (o[row.Name] || 0) + row.Duration;
-            o[row.Name] = sum;
-        };
-    };
-
-    serviceLogEntries.forEach(createAddToSupervisedHours(supervisedHours.Total));
-    serviceLogEntries.forEach(createAddToSupervisedHours(supervisedHours.ServiceLogEntry));
-    resultNotes.forEach(createAddToSupervisedHours(supervisedHours.Total));
-    resultNotes.forEach(createAddToSupervisedHours(supervisedHours.ResultNote));
+        })
+        .toDictionary(function (row) { return row.Name; }, function (row) { return row; });
 
     var percents = hours
         .map(function (row) {
-            var supervised = (supervisedHours.Total[row.Name] || 0);
+            var supervised = 0;
+            var supervisedIndividual = 0;
+            var data = entries[row.Name];
+            if (data !== undefined) {
+                supervised = data.Duration;
+                supervisedIndividual = data.DurationIndividual;
+            }
+
             return {
                 Name: row.Name,
                 RequiredHours: Math.max(0, (row.Duration * 0.07) - supervised),
                 Total: row.Duration,
                 Supervised: supervised,
-                'Service Log Entry': supervisedHours.ServiceLogEntry[row.Name] || 0,
-                'Result Note': supervisedHours.ResultNote[row.Name] || 0,
+                'Supervised (Individual)': supervisedIndividual,
                 Fraction: supervised / row.Duration
             };
         });
 
     return {
         Data: percents,
-        InvalidResultNotes: resultNotesInvalid,
-        InvalidServiceLogEntries: serviceLogEntriesInvalid
+        Invalid: entriesInvalid,
     };
 }
 
 function parseResultNote(note) {
     return note.split(/ *; */);
 }
+
+Array.prototype.concat = function (other) {
+    var result = [];
+    for (var i = 0, count = this.length; i < count; i++) {
+        result.push(this[i]);
+    }
+    for (i = 0, count = other.length; i < count; i++) {
+        result.push(other[i]);
+    }
+    return result;
+};
 
 Array.prototype.selectMany = function (f) {
     var result = [];
