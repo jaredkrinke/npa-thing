@@ -68,9 +68,9 @@ function process(body, delimiter) {
 
             var resultNote = row['Result Note'];
             if (resultNote) {
-                var names = parseResultNote(row['Result Note']);
-                for (var i = 0, count = names.length; i < count; i++) {
-                    var name = names[i];
+                var resultNoteNames = parseResultNote(resultNote);
+                for (var i = 0, count = resultNoteNames.length; i < count; i++) {
+                    var name = resultNoteNames[i];
                     if (name != serviceLogEntry) {
                         names.push(name);
                     }
@@ -81,7 +81,7 @@ function process(body, delimiter) {
                 return {
                     Valid: !!(hoursMap[name]),
                     Name: name,
-                    Individual: (names.length === 1 && names[0] === serviceLogEntry),
+                    Individual: (names.length === 1),
                     Duration: parseFloat(row['Duration (Hrs)'])
                 };
             });
