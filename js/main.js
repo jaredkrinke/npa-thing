@@ -11,7 +11,8 @@
                 var output = process(input, ',');
 
                 populateTable($('#output'), output.Data);
-                populateTable($('#output-invalid'), output.Invalid);
+                populateTable($('#output-invalid-sle'), output.InvalidServiceLogEntries);
+                populateTable($('#output-invalid-rn'), output.InvalidResultNotes);
             };
 
             fr.readAsText( file );
@@ -68,6 +69,12 @@ function process(body, delimiter) {
             };
         });
 
+    var staffNames = data
+        .groupBy(['Staff Name'])
+        .toDictionary(function (group) { return group.key; }, function () { return true; });
+
+    var serviceLogEntriesInvalid = serviceLogEntries
+        .where(function (row) { return staffNames[row.Name] === undefined; });
 
     var resultNotesRaw = data
         .where(function (row) { return row['Result Note']; })
@@ -127,7 +134,8 @@ function process(body, delimiter) {
 
     return {
         Data: percents,
-        Invalid: resultNotesInvalid
+        InvalidResultNotes: resultNotesInvalid,
+        InvalidServiceLogEntries: serviceLogEntriesInvalid
     };
 }
 
