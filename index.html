@@ -8,7 +8,9 @@
     <script src="//code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
+    <script src="js/core.js"></script>
     <script src="js/main.js"></script>
+    <style>.alignRight { text-align: right; }</style>
 </head>
 <body>
     <div class="container">
@@ -33,6 +35,22 @@
             </div>
             <div class="panel-body">
                 <table id="output" class="display"></table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h5 class="panel-title">Name corrections</h5>
+            </div>
+            <div class="panel-body">
+                <table id="output-names" class="display"></table>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h5 class="panel-title">Summary (using names as entered)</h5>
+            </div>
+            <div class="panel-body">
+                <table id="output-raw" class="display"></table>
             </div>
         </div>
         <div class="panel panel-default">
