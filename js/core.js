@@ -44,16 +44,6 @@
                     };
                 });
             });
-    
-        var entriesInvalid = entriesRaw
-            .where(function (row) { return !row.Valid; })
-            .map(function (row) {
-                return {
-                    Name: row.Name,
-                    Individual: row.Individual,
-                    Duration: row.Duration
-                };
-            });
 
         // Fix names
         var validNames = data
@@ -98,6 +88,26 @@
                     Duration: row.Duration
                 };
             });
+    
+        var entriesInvalid = entriesInferred
+            .where(function (row) { return !row.Valid; })
+            .map(function (row) {
+                return {
+                    Name: row.Name,
+                    Individual: row.Individual,
+                    Duration: row.Duration
+                };
+            });
+    
+        var entriesInvalidRaw = entriesRaw
+            .where(function (row) { return !row.Valid; })
+            .map(function (row) {
+                return {
+                    Name: row.Name,
+                    Individual: row.Individual,
+                    Duration: row.Duration
+                };
+            });
 
         var getPercents = function (input) {
             var entries = input
@@ -138,6 +148,7 @@
             Data: getPercents(entriesInferred),
             DataRaw: getPercents(entriesInferred.where(function (row) { return !row.Inferred; })),
             Invalid: entriesInvalid,
+            InvalidRaw: entriesInvalidRaw,
             Names: names
         };
     };

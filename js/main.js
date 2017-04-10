@@ -10,10 +10,11 @@
                 var input = fr.result;
                 var output = core.process(input, ',');
 
-                populateTable($('#output'), output.Data);
                 populateTable($('#output-names'), output.Names);
-                populateTable($('#output-raw'), output.DataRaw);
+                populateTable($('#output'), output.Data);
                 populateTable($('#output-invalid'), output.Invalid);
+                populateTable($('#output-raw'), output.DataRaw);
+                populateTable($('#output-invalid-raw'), output.InvalidRaw);
             };
 
             fr.readAsText( file );

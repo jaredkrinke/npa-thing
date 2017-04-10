@@ -10,7 +10,9 @@
     <script src="//cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
     <script src="js/core.js"></script>
     <script src="js/main.js"></script>
-    <style>.alignRight { text-align: right; }</style>
+    <style>
+        .alignRight { text-align: right; }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -29,36 +31,42 @@
                 </form>
             </div>
         </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h5 class="panel-title">Summary</h5>
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            Using corrected names
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <div class="alert alert-danger"><strong>Manually inspect these automatic name corrections to ensure they are make sense</strong>. If <strong>any</strong> of the automatic name corrections don't make sense, click on the "using names as entered" section and use those tables instead.</div>
+                        <table id="output-names" class="display table"><caption>Name corrections</caption></table>
+                        <div class="alert alert-info">Assuming automatic name corrections are accurate, sort by "required hours" to find people that need more hours. Afterwards, sort by "supervised, individual" to find people that don't have individual supervision.</div>
+                        <table id="output" class="display table"><caption>Summary (after correcting names)</caption></table>
+                        <div class="alert alert-info">The following table lists all entries where the name didn't match a staff member name or any of that staff member's aliases (listed in the "name corrections" table)</div>
+                        <table id="output-invalid" class="display table"><caption>Invalid entries (i.e. name doesn't match a staff member of any aliases (listed in the "name corrections" table)</caption></table>
+                    </div>
+                </div>
             </div>
-            <div class="panel-body">
-                <table id="output" class="display"></table>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h5 class="panel-title">Name corrections</h5>
-            </div>
-            <div class="panel-body">
-                <table id="output-names" class="display"></table>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h5 class="panel-title">Summary (using names as entered)</h5>
-            </div>
-            <div class="panel-body">
-                <table id="output-raw" class="display"></table>
-            </div>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h5 class="panel-title">Invalid entries</h5>
-            </div>
-            <div class="panel-body">
-                <table id="output-invalid" class="display"></table>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingTwo">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            Using names as entered
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+                    <div class="panel-body">
+                        <div class="alert alert-info">If <strong>any</strong> automatic name corrections did not make sense, then use the following two tables, which only use names as entered and require names to match exactly in order to be counted.</div>
+                        <table id="output-raw" class="display table"><caption>Summary (using names as entered)</caption></table>
+                        <div class="alert alert-info">The following table lists all entries that didn't have an <strong>exact</strong> match on a staff member name.</div>
+                        <table id="output-invalid-raw" class="display table"><caption>Invalid entries (i.e. name doesn't <strong>exactly</strong> match a staff member)</caption></table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
