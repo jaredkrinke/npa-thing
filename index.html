@@ -16,19 +16,65 @@
 </head>
 <body>
     <div class="container">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h5 class="panel-title">Input</h5>
-            </div>
-            <div class="panel-body">
-                <form id="input-form" class="form-inline" role="form" novalidate="novalidate">
-                    <div class="form-group">
-                        <label class="btn btn-default btn-file">
-                            First choose a CSV file <input class="btn btn-default btn-file" type="file" id="file" style="display:none">
-                        </label>
+        <div class="panel-group" id="accordion2" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="ah21">
+                    <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion2" href="#ac21" aria-expanded="true" aria-controls="ac21">
+                                Input
+                        </a>
+                    </h4>
+                </div>
+                <div id="ac21" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="ah21">
+                    <div class="panel-body">
+                        <form id="input-form" class="form-inline" role="form" novalidate="novalidate">
+                            <div class="form-group">
+                                <label class="btn btn-default btn-file">
+                                    First choose a CSV file <input class="btn btn-default btn-file" type="file" id="file" style="display:none">
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn-default">Then click this button</button>
+                        </form>
                     </div>
-                    <button type="submit" class="btn btn-default">Then click this button</button>
-                </form>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="ah22">
+                    <h4 class="panel-title">
+                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion2" href="#ac22" aria-expanded="false" aria-controls="ac22">
+                                How to generate input data
+                        </a>
+                    </h4>
+                </div>
+                <div id="ac22" class="panel-collapse collapse" role="tabpanel" aria-labelledby="ah22">
+                    <div class="panel-body">
+                            To create an excel report:
+                            <ol>
+                                <li>Open flexible reporting</li>
+                                <li>Under "Admin" click "Appointments admin"</li>
+                                <li>Select desired start and end dates</li>
+                                <li>Set appointment status to "Active</li>
+                                <li>Select appointment types "Non-Service Payroll (Blue) Appointments" and "Service Appointments"</li>
+                                <li>Set show terminated staff to "No"</li>
+                                <li>Click on "Column Options"</li>
+                                <li>Select the following:
+                                    <ul>
+                                        <li>Duration (Hrs)</li>
+                                        <li>Appt. Status</li>
+                                        <li>Result Note</li>
+                                        <li>Service Log Entry</li>
+                                        <li>Staff Job Title</li>
+                                        <li>Staff Name</li>
+                                        <li>Subject Line</li>
+                                    </ul>
+                                </li>
+                                <li>Click OK</li>
+                                <li>Click on "Run the report"</li>
+                                <li>Click on "Excel"</li>
+                                <li>Once your report opens, save as CSV (comma delineated)</li>
+                            </ol>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
@@ -47,7 +93,7 @@
                         <div class="alert alert-info">Assuming automatic name corrections are accurate, sort by "required hours" to find people that need more hours. Afterwards, sort by "supervised, individual" to find people that don't have individual supervision.</div>
                         <table id="output" class="display table"><caption>Summary (after correcting names)</caption></table>
                         <div class="alert alert-info">The following table lists all entries where the name didn't match a staff member name or any of that staff member's aliases (listed in the "name corrections" table)</div>
-                        <table id="output-invalid" class="display table"><caption>Invalid entries (i.e. name doesn't match a staff member of any aliases (listed in the "name corrections" table)</caption></table>
+                        <table id="output-invalid" class="display table"><caption>Invalid entries (i.e. name doesn't match a staff member or any aliases (listed in the "name corrections" table)</caption></table>
                     </div>
                 </div>
             </div>
