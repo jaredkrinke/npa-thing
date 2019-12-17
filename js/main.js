@@ -69,6 +69,7 @@ function populateTable($, columns, data) {
         }
 
         $.DataTable({
+            destroy: true,
             data: dataSet,
             columns: columns
         });
