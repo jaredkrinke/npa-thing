@@ -357,24 +357,24 @@
     
     var parseSVLine = function (line, delimiter) {
         var index = 0;
-        var inQuotes = false;
+        var notInQuotes = true; // Inverted to work around Edge JIT bug ChakraCore #6252
         var inEscape = false;
         var quoted = false;
         var values = [];
         for (var i = 0, count = line.length; i < count; i++) {
-            if (inQuotes) {
+            if (!notInQuotes) {
                 if (inEscape) {
                     inEscape = false;
                 } else {
                     if (line[i] === '\\') {
                         inEscape = true;
                     } else if (line[i] === '"') {
-                        inQuotes = false;
+                        notInQuotes = true;
                     }
                 }
             } else {
                 if (line[i] === '"') {
-                    inQuotes = true;
+                    notInQuotes = false;
                     inEscape = false;
                     quoted = true;
                 } else if (line[i] === delimiter) {
