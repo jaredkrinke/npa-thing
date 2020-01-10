@@ -451,5 +451,6 @@
 
     // For testing
     exports.fixSuspectNames = fixSuspectNames;
+    exports.parseSV = parseSV;
 
 })(typeof (exports) === 'undefined' ? (core = {}) : exports);
