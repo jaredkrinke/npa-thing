@@ -3,7 +3,7 @@
         var data = parseSV(body, delimiter);
     
         var hours = data
-            .where(function (row) { return row['Staff Job Title'] === 'Behavior Technician' || row['Staff Job Title'] === 'Behavior Specialist' || row['Staff Job Title'] === 'Program Manager'; })
+            .where(function (row) { return row['Staff Job Title'] === 'Behavior Technician' || row['Staff Job Title'] === 'BCaBA' || row['Staff Job Title'] === 'Program Manager'; })
             .where(function (row) { return !row['Appt. Status'].startsWith('Unavailable') && !row['Appt. Status'].startsWith('Vacation'); })
             .where(function (row) {
                 var subjectLine = row['Subject Line'].toLowerCase();
