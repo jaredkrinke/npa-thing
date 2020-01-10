@@ -143,7 +143,7 @@
     
                     return {
                         Name: row.Name,
-                        'Required Hours': Math.max(0, (row.Duration * 0.07) - supervised),
+                        'Required Hours': Math.max(0, (row.Duration * 0.05) - supervised),
                         Total: row.Duration,
                         Supervised: supervised,
                         'Supervised, Individual': supervisedIndividual,
