@@ -5,7 +5,13 @@
         var hours = data
             .where(function (row) { return row['Staff Job Title'] === 'Behavior Technician' || row['Staff Job Title'] === 'Behavior Specialist' || row['Staff Job Title'] === 'Program Manager'; })
             .where(function (row) { return !row['Appt. Status'].startsWith('Unavailable') && !row['Appt. Status'].startsWith('Vacation'); })
-            .where(function (row) { return !row['Subject Line'].startsWith('Drive') && !row['Subject Line'].startsWith('Cancel'); })
+            .where(function (row) {
+                var subjectLine = row['Subject Line'].toLowerCase();
+                return !subjectLine.startsWith('drive')
+                    && !subjectLine.startsWith('clean')
+                    && (subjectLine.indexOf('prep time') < 0)
+                    && !subjectLine.startsWith('cancel');
+            })
             .groupBy(['Staff Name'])
             .orderBy('key')
             .map(function (group) {
@@ -151,7 +157,11 @@
             DataRaw: getPercents(entriesInferred.where(function (row) { return !row.Inferred; })),
             Invalid: entriesInvalid,
             InvalidRaw: entriesInvalidRaw,
-            Names: names
+            Names: names,
+
+            // For testing
+            ValidNames: validNames,
+            SuspectNames: suspectNames
         };
     };
 
@@ -173,7 +183,7 @@
         return normalizedName;
     };
 
-    var fixSuspectNames = function (suspectNames, validNames) {
+    function fixSuspectNames(suspectNames, validNames) {
         var tree = buildNameTree(validNames);
 
         var fixed = [];
@@ -181,31 +191,35 @@
 
         for (var i = 0, count = suspectNames.length; i < count; i++) {
             var name = suspectNames[i];
-            var normalizedName = normalizeName(name);
-            var matchingName = findMatchingName(normalizedName, tree);
 
-            if (matchingName === undefined && normalizedName.indexOf('mc') === 0) {
-                matchingName = findMatchingName('mac' + normalizedName.substr(2), tree);
-            }
+            // Only try to fix entries that aren't obviously invalid
+            if (name.indexOf(';') === -1 && name.split(',').length <= 2) {
+                var normalizedName = normalizeName(name);
+                var matchingName = findMatchingName(normalizedName, tree);
 
-            if (matchingName === undefined && normalizedName.indexOf('mac') === 0) {
-                matchingName = findMatchingName('mc' + normalizedName.substr(3), tree);
-            }
+                if (matchingName === undefined && normalizedName.indexOf('mc') === 0) {
+                    matchingName = findMatchingName('mac' + normalizedName.substr(2), tree);
+                }
 
-            // If no match, try reversing the order of first/last name
-            if (matchingName === undefined) {
-                var parts = normalizedName.split(',');
-                var reversedName = parts.reverse().join(',');
-                matchingName = findMatchingName(reversedName, tree);
-            }
+                if (matchingName === undefined && normalizedName.indexOf('mac') === 0) {
+                    matchingName = findMatchingName('mc' + normalizedName.substr(3), tree);
+                }
 
-            if (matchingName) {
-                fixed.push({
-                    OriginalName: name,
-                    FixedName: matchingName
-                });
+                // If no match, try reversing the order of first/last name
+                if (matchingName === undefined) {
+                    var parts = normalizedName.split(',');
+                    var reversedName = parts.reverse().join(',');
+                    matchingName = findMatchingName(reversedName, tree);
+                }
 
-                continue;
+                if (matchingName) {
+                    fixed.push({
+                        OriginalName: name,
+                        FixedName: matchingName
+                    });
+
+                    continue;
+                }
             }
 
             notFixed.push(name);
@@ -215,7 +229,7 @@
             Fixed: fixed,
             NotFixed: notFixed
         };
-    };
+    }
 
     var buildNameTree = function (names) {
         var tree = {};
@@ -434,5 +448,8 @@
     
         return output;
     };
+
+    // For testing
+    exports.fixSuspectNames = fixSuspectNames;
 
 })(typeof (exports) === 'undefined' ? (core = {}) : exports);
