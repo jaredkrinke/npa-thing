@@ -9,6 +9,13 @@
                 var subjectLine = row['Subject Line'].toLowerCase();
                 return !subjectLine.startsWith('drive')
                     && !subjectLine.startsWith('clean')
+                    && !subjectLine.startsWith('pto')
+                    && !subjectLine.startsWith('epto')
+                    && !subjectLine.startsWith('fmla')
+                    && !subjectLine.startsWith('efmla')
+                    && !subjectLine.startsWith('comp')
+                    && !subjectLine.startsWith('inservice')
+                    && !subjectLine.startsWith('in-service')
                     && (subjectLine.indexOf('prep time') < 0)
                     && !subjectLine.startsWith('cancel');
             })
