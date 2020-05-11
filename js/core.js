@@ -301,14 +301,28 @@
                 var originalParts = name.split(',');
                 var fixedParts = normalizeName(matchingName).split(',');
                 if (originalParts.length >= 2 && fixedParts.length >= 2 && originalParts[0][0] === fixedParts[0][0] && originalParts[1][0] === fixedParts[1][0]) {
-                    return matchingName;
+                    // Make sure 85% of original letters exist in the adjusted name
+                    var originalPartsConcatenated = originalParts.join("");
+                    var fixedPartsConcatenated = fixedParts.join("");
+                    var totalCharacters = 0;
+                    var matchedCharacters = 0;
+                    for (var j = 0; j < originalPartsConcatenated.length; j++) {
+                        totalCharacters++;
+                        if (fixedPartsConcatenated.indexOf(originalPartsConcatenated.charAt(j)) >= 0) {
+                            matchedCharacters++;
+                        }
+                    }
+
+                    if ((matchedCharacters / totalCharacters) >= 0.85) {
+                        return matchingName;
+                    }
                 }
 
                 break;
             }
         }
 
-        return
+        return;
     };
     
     var parseResultNote = function (note) {
