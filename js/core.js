@@ -6,6 +6,7 @@
             .where(function (row) { return row['Staff Job Title'] === 'Behavior Technician' || row['Staff Job Title'] === 'BCaBA' || row['Staff Job Title'] === 'Program Manager'; })
             .where(function (row) { return !row['Appt. Status'].startsWith('Unavailable') && !row['Appt. Status'].startsWith('Vacation'); })
             .where(function (row) {
+                // Filter based on "Subject Line" column
                 var subjectLine = row['Subject Line'].toLowerCase();
                 return !subjectLine.startsWith('drive')
                     && !subjectLine.startsWith('clean')
@@ -18,6 +19,12 @@
                     && !subjectLine.startsWith('in-service')
                     && (subjectLine.indexOf('prep time') < 0)
                     && !subjectLine.startsWith('cancel');
+            })
+            .where(function (row) {
+                // Filter based on "Office Note" column
+                var officeNote = row['Office Note'].toLowerCase();
+                return (officeNote.indexOf('service') < 0)
+                    && (officeNote.indexOf('indirect') < 0);
             })
             .groupBy(['Staff Name'])
             .orderBy('key')
@@ -41,11 +48,21 @@
     
                 var resultNote = row['Result Note'];
                 if (resultNote) {
-                    var resultNoteNames = parseResultNote(resultNote);
-                    for (var i = 0, count = resultNoteNames.length; i < count; i++) {
-                        var name = resultNoteNames[i];
-                        if (name != serviceLogEntry) {
-                            names.push(name);
+                    // Only parse "Result Note" column on rows with certain job titles
+                    if (row['Staff Job Title'] === 'BCaBA' || row['Staff Job Title'] === 'BCBA') {
+                        // There should be at most 10 people, semicolon-delimited, with at most 3 spaces per name
+                        var resultNoteNames = parseResultNote(resultNote);
+                        var nameCount = resultNoteNames.length;
+                        var spaceCount = resultNote.split(/ +/).length;
+                        var reasonableNumberOfSpaces = (spaceCount < (nameCount * 3));
+
+                        if (reasonableNumberOfSpaces) {
+                            for (var i = 0, count = resultNoteNames.length; i < count; i++) {
+                                var name = resultNoteNames[i];
+                                if (name != serviceLogEntry) {
+                                    names.push(name);
+                                }
+                            }
                         }
                     }
                 }
