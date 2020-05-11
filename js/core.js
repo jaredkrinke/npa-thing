@@ -23,7 +23,9 @@
             .where(function (row) {
                 // Filter based on "Office Note" column
                 var officeNote = row['Office Note'].toLowerCase();
-                return (officeNote.indexOf('service') < 0)
+                return (officeNote.indexOf('inservice') < 0)
+                    && (officeNote.indexOf('in-service') < 0)
+                    && (officeNote.indexOf('in service') < 0)
                     && (officeNote.indexOf('indirect') < 0);
             })
             .groupBy(['Staff Name'])
