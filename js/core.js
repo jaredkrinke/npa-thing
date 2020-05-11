@@ -22,11 +22,15 @@
             })
             .where(function (row) {
                 // Filter based on "Office Note" column
-                var officeNote = row['Office Note'].toLowerCase();
-                return (officeNote.indexOf('inservice') < 0)
+                var officeNoteCased = row['Office Note'];
+                if (officeNoteCased) {
+                    var officeNote = officeNoteCased.toLowerCase();
+                    return (officeNote.indexOf('inservice') < 0)
                     && (officeNote.indexOf('in-service') < 0)
                     && (officeNote.indexOf('in service') < 0)
                     && (officeNote.indexOf('indirect') < 0);
+                }
+                return true;
             })
             .groupBy(['Staff Name'])
             .orderBy('key')
