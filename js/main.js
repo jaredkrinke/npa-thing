@@ -7,41 +7,48 @@
             file = input.files[0];
             fr = new FileReader();
             fr.onload = function () {
-                var input = fr.result;
-                var output = core.process(input, ',');
-
-                var renderHours = $('#output').DataTable.render.number( ',', '.', 2 );
-
-                // Round percents down to next 0.1% increment (to ensure that even 4.99% is inadequate, i.e. less than 5%)
-                var renderPercent = function (value) { return (Math.floor(value * 1000) / 10) + "%"; };
-
-                var summaryColumns = [
-                    { title: 'Name' },
-                    { title: 'Required Hours', render: renderHours },
-                    { title: 'Total', render: renderHours },
-                    { title: 'Supervised', render: renderHours },
-                    { title: 'Supervised, Individual', render: renderHours },
-                    { title: 'Fraction', render: renderPercent }
-                ];
-
-                var invalidColumns = [
-                    { title: 'Name' },
-                    { title: 'Individual' },
-                    { title: 'Duration', renderHours }
-                ];
-
-                populateTable(
-                    $('#output-names'),
-                    [
+                try {
+                    var input = fr.result;
+                    var output = core.process(input, ',');
+                    if (output.Data.length <= 0) {
+                        throw "No input data";
+                    }
+    
+                    var renderHours = $('#output').DataTable.render.number( ',', '.', 2 );
+    
+                    // Round percents down to next 0.1% increment (to ensure that even 4.99% is inadequate, i.e. less than 5%)
+                    var renderPercent = function (value) { return (Math.floor(value * 1000) / 10) + "%"; };
+    
+                    var summaryColumns = [
                         { title: 'Name' },
-                        { title: 'Aliases' }
-                    ],
-                    output.Names);
-
-                populateTable($('#output'), summaryColumns, output.Data);
-                populateTable($('#output-invalid'), invalidColumns, output.Invalid);
-                populateTable($('#output-raw'), summaryColumns, output.DataRaw);
-                populateTable($('#output-invalid-raw'), invalidColumns, output.InvalidRaw);
+                        { title: 'Required Hours', render: renderHours },
+                        { title: 'Total', render: renderHours },
+                        { title: 'Supervised', render: renderHours },
+                        { title: 'Supervised, Individual', render: renderHours },
+                        { title: 'Fraction', render: renderPercent }
+                    ];
+    
+                    var invalidColumns = [
+                        { title: 'Name' },
+                        { title: 'Individual' },
+                        { title: 'Duration', renderHours }
+                    ];
+    
+                    populateTable(
+                        $('#output-names'),
+                        [
+                            { title: 'Name' },
+                            { title: 'Aliases' }
+                        ],
+                        output.Names);
+    
+                    populateTable($('#output'), summaryColumns, output.Data);
+                    populateTable($('#output-invalid'), invalidColumns, output.Invalid);
+                    populateTable($('#output-raw'), summaryColumns, output.DataRaw);
+                    populateTable($('#output-invalid-raw'), invalidColumns, output.InvalidRaw);
+                } catch (e) {
+                    alert("Error processing input file. Please double-check the instructions and make sure all the correct columns were exported to CSV format.\n\nInternal error message: " + e);
+                }
             };
 
             fr.readAsText( file );
