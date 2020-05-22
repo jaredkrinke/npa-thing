@@ -23,14 +23,17 @@
             .where(function (row) {
                 // Filter based on "Office Note" column
                 var officeNoteCased = row['Office Note'];
+                var include = true;
                 if (officeNoteCased) {
                     var officeNote = officeNoteCased.toLowerCase();
-                    return (officeNote.indexOf('inservice') < 0)
-                    && (officeNote.indexOf('in-service') < 0)
-                    && (officeNote.indexOf('in service') < 0)
-                    && (officeNote.indexOf('indirect') < 0);
+                    include = (officeNote.indexOf('inservice') < 0)
+                        && (officeNote.indexOf('in-service') < 0)
+                        && (officeNote.indexOf('in service') < 0)
+                        && (officeNote.indexOf('indirect') < 0)
+                        && !(/pd\s|pd$/.test(officeNote))
+                        && !(/client no[ \-]show/.test(officeNote));
                 }
-                return true;
+                return include;
             })
             .groupBy(['Staff Name'])
             .orderBy('key')
