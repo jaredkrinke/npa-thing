@@ -1,7 +1,18 @@
+// This file includes the core parsing/computation logic in the following order:
+//
+// * Main logic entry point named "process" (this calls into many helpers defined later)
+// * Helpers for fixing mistyped names
+// * Helpers for dealing with rows of data (modeled after LINQ)
+// * Helpers for parsing comma-separated value (CSV) input strings/files
+
 (function (exports) {
+
+    // This is the main logic entry point
     exports.process = function process(body, delimiter) {
+        // Parse input string into an array of dictionary-like objects
         var data = parseSV(body, delimiter);
     
+        // Filter input rows, group by staff name, and sum the number of hours worked
         var hours = data
             .where(function (row) { return row['Staff Job Title'] === 'Behavior Technician' || row['Staff Job Title'] === 'BCaBA' || row['Staff Job Title'] === 'Program Manager'; })
             .where(function (row) { return !row['Appt. Status'].startsWith('Unavailable') && !row['Appt. Status'].startsWith('Vacation'); })
@@ -44,8 +55,10 @@
                 };
             });
     
+        // Create a map from staff name to hours worked
         var hoursMap = hours.toDictionary(function (item) { return item.Name; }, function (item) { return item.Duration; });
     
+        // Create rows for each name, to handle group supervision
         var entriesRaw = data
             .where(function (row) { return (row['Service Log Entry'] || row['Result Note']) && parseFloat(row['Duration (Hrs)']); })
             .selectMany(function (row) {
@@ -55,6 +68,7 @@
                     names.push(serviceLogEntry);
                 }
     
+                // Heuristics for ignoring unwanted/invalid rows
                 var resultNote = row['Result Note'];
                 if (resultNote) {
                     // Only parse "Result Note" column on rows with certain job titles
@@ -76,6 +90,7 @@
                     }
                 }
     
+                // Duplicate row for each supervisee
                 return names.map(function (name) {
                     return {
                         Valid: !!(hoursMap[name]),
@@ -114,9 +129,11 @@
                 };
             });
 
+        // Map from aliases to correct names
         var aliasToName = fixedNames.Fixed
             .toDictionary(function (row) { return row.OriginalName; }, function (row) { return row.FixedName; });
     
+        // Use correct names, when available (and mark others as invalid)
         var entriesInferred = entriesRaw
             .map(function (row) {
                 var fixedName = aliasToName[row.Name];
@@ -129,7 +146,8 @@
                     Duration: row.Duration
                 };
             });
-    
+
+        // Record invalid entries for later return
         var entriesInvalid = entriesInferred
             .where(function (row) { return !row.Valid; })
             .map(function (row) {
@@ -150,6 +168,7 @@
                 };
             });
 
+        // Helper to calculate supervision percents on valid rows (used below)
         var getPercents = function (input) {
             var entries = input
                 .where(function (row) { return row.Valid; })
@@ -164,6 +183,7 @@
                 })
                 .toDictionary(function (row) { return row.Name; }, function (row) { return row; });
     
+            // Note: "hours" (defined way at the beginning) is grouped by staff name, so there will be 1 row for each staff name that wasn't filtered
             return hours
                 .map(function (row) {
                     var supervised = 0;
@@ -185,6 +205,7 @@
                 });
             };
 
+        // Return data for all required tables
         return {
             Data: getPercents(entriesInferred),
             DataRaw: getPercents(entriesInferred.where(function (row) { return !row.Inferred; })),
@@ -198,14 +219,16 @@
         };
     };
 
+    // Helpers for fixing names
     var normalizeName = function (name) {
         var normalizedName = name
             .toLowerCase()
-            .replace(/ *, */, ',')
-            .replace(/ *- */, '-')
-            .replace(/ +/, ' ')
-            .replace(/[^-,a-zA-Z ]/, '');
+            .replace(/ *, */, ',')  // Remove extra spaces
+            .replace(/ *- */, '-')  // Remove extra spaces
+            .replace(/ +/, ' ')     // Coalesce spaces
+            .replace(/[^-,a-zA-Z ]/, ''); // Remove characters we don't care about (TODO: this probably should leave any alphabetical characters alone, e.g. characters with accents)
 
+        // Ensure name is last name, first name
         if (normalizedName.indexOf(',') < 0) {
             var parts = normalizedName.split(' ');
             if (parts.length === 2) {
@@ -217,6 +240,9 @@
     };
 
     function fixSuspectNames(suspectNames, validNames) {
+        // Use a bunch of random heuristics to try and fix up mistyped/misspelled names
+
+        // Create a tree for looking up names based on the first several characters
         var tree = buildNameTree(validNames);
 
         var fixed = [];
@@ -230,6 +256,7 @@
                 var normalizedName = normalizeName(name);
                 var matchingName = findMatchingName(normalizedName, tree);
 
+                // Special cases to handle "McSomething" and "MacSomething"
                 if (matchingName === undefined && normalizedName.indexOf('mc') === 0) {
                     matchingName = findMatchingName('mac' + normalizedName.substr(2), tree);
                 }
@@ -239,6 +266,7 @@
                 }
 
                 // If no match, try reversing the order of first/last name
+                // (Note: sometimes this can incorrectly match names, especially if someone has left the company and isn't in the staff list)
                 if (matchingName === undefined) {
                     var parts = normalizedName.split(',');
                     var reversedName = parts.reverse().join(',');
@@ -292,6 +320,7 @@
     };
 
     var findMatchingName = function (name, tree) {
+        // Find a matching name in a name tree
         for (var i = 0, count = name.length; i < count; i++) {
             var c = name[i];
             tree = tree[c];
@@ -328,10 +357,14 @@
         return;
     };
     
+    // Helper for splitting lists of names
     var parseResultNote = function (note) {
         return note.split(/ *; */);
     };
     
+    // Helpers for dealing with rows of data (modeled after LINQ)
+
+    // Concatenate a second array onto the end of this one (note: this create a new array for the result)
     Array.prototype.concat = function (other) {
         var result = [];
         for (var i = 0, count = this.length; i < count; i++) {
@@ -343,6 +376,7 @@
         return result;
     };
     
+    // Split/explode array (one-to-many mapping), e.g. split ['a,b,c', 'd'] into ['a', 'b', 'c', 'd']
     Array.prototype.selectMany = function (f) {
         var result = [];
         for (var i = 0, count = this.length; i < count; i++) {
@@ -354,6 +388,7 @@
         return result;
     };
     
+    // Convert an array into a dictionary using the supplied callback functions to get the corresponding key and the value for each item
     Array.prototype.toDictionary = function (getKey, getValue) {
         var result = {};
         for (var i = 0, count = this.length; i < count; i++) {
@@ -363,6 +398,7 @@
         return result;
     };
     
+    // Sort an array based on the named property (note: this mutates the array; TODO: create a new array instead, to avoid subtle bugs)
     Array.prototype.orderBy = function (property) {
         return this.sort(function (a, b) {
             var pa = a[property];
@@ -377,6 +413,7 @@
         });
     };
     
+    // Create a new array with only items that match the "test" callback function (which should return true to include an item)
     Array.prototype.where = function (test) {
         var matched = [];
         for (var i = 0, count = this.length; i < count; i++) {
@@ -387,6 +424,7 @@
         return matched;
     };
     
+    // Group an array based on one or more properties; there will be an object for each group with a property named "key" that corresponds to the group's key
     Array.prototype.groupBy = function (properties) {
         var indexes = {};
         var groups = [];
@@ -409,6 +447,7 @@
         return groups;
     };
     
+    // Helper for running a callback function on each line of a string
     String.prototype.forEachLine = function (cb) {
         var lines = this.split(/\r?\n/);
         for (var i = 0, count = lines.length; i < count; i++) {
@@ -416,6 +455,7 @@
         }
     };
     
+    // Helper for parsing delimiter-separated value lines
     var parseSVLine = function (line, delimiter) {
         var index = 0;
         var notInQuotes = true; // Inverted to work around Edge JIT bug ChakraCore #6252
@@ -451,6 +491,7 @@
         return values;
     };
     
+    // Helper for parsing an entire delimiter-separated value file
     var parseSV = function (input, delimiter) {
         var first = true;
         var schema = [];
@@ -472,31 +513,8 @@
     
         return rows;
     };
-    
-    var escapeCsvEntry = function (entry) {
-        var e = '' + entry;
-        if (e.indexOf(',') >= 0) {
-            return '"' + e.replace(/"/, '\\') + '"';
-        }
-        return e;
-    };
-    
-    Array.prototype.toCsv = function () {
-        var schema = [];
-        for (var key in this[0]) {
-            schema.push(key);
-        }
-    
-        var output = schema.map(function (name) { return escapeCsvEntry(name); }).join(',') + '\n';
-        for (var i = 0, count = this.length; i < count; i++) {
-            var row = this[i];
-            output += schema.map(function (name) { return escapeCsvEntry(row[name]); }).join(',') + '\n';
-        }
-    
-        return output;
-    };
 
-    // For testing
+    // These functions are exported for testing purposes only
     exports.fixSuspectNames = fixSuspectNames;
     exports.parseSV = parseSV;
 
