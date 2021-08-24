@@ -60,13 +60,9 @@
     
         // Create rows for each name, to handle group supervision
         var entriesRaw = data
-            .where(function (row) { return (row['Service Log Entry'] || row['Result Note']) && parseFloat(row['Duration (Hrs)']); })
+            .where(function (row) { return row['Result Note'] && parseFloat(row['Duration (Hrs)']); })
             .selectMany(function (row) {
                 var names = [];
-                var serviceLogEntry = row['Service Log Entry'];
-                if (serviceLogEntry) {
-                    names.push(serviceLogEntry);
-                }
     
                 // Heuristics for ignoring unwanted/invalid rows
                 var resultNote = row['Result Note'];
